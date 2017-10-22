@@ -432,7 +432,13 @@ class BaseRedisChannelLayer(BaseChannelLayer):
         """
         if self.crypter:
             message = self.crypter.decrypt(message, self.expiry + 10)
-        return msgpack.unpackb(message, encoding="utf8")
+        result = dict()
+        for key, value in msgpack.unpackb(message, encoding="utf8").items():
+            # Sometimes msgpack returns raw bytes; perform additional decoding.
+            if isinstance(key, bytes):
+                key = key.decode("utf-8")
+            result.update({key: value})
+        return result
 
     ### Redis Lua scripts ###
 
